@@ -18,29 +18,32 @@ def plot_boxes(frame, model):
 
 # Function to process and display video
 def process_video(source, model, options=None):
-    if source == 'Local':
-        cap = cv2.VideoCapture(0)  # Local webcam
-    else:  # YouTube source
-        cap = CamGear(source=source, stream_mode=True, logging=True, **options).start()
-
-    FRAME_WINDOW = st.empty()
-
-    while True:
+    try:
         if source == 'Local':
-            ret, frame = cap.read()
-            if not ret:
-                break
+            cap = cv2.VideoCapture(0)  # Local webcam
         else:  # YouTube source
-            frame = cap.read()
-            if frame is None:
-                break
-        
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = plot_boxes(frame, model)
-        FRAME_WINDOW.image(frame)
+            cap = CamGear(source=source, stream_mode=True, logging=True, **options).start()
 
-    if source == 'Local':
-        cap.release()
+        FRAME_WINDOW = st.empty()
+
+        while True:
+            if source == 'Local':
+                ret, frame = cap.read()
+                if not ret:
+                    break
+            else:  # YouTube source
+                frame = cap.read()
+                if frame is None:
+                    break
+            
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = plot_boxes(frame, model)
+            FRAME_WINDOW.image(frame)
+
+        if source == 'Local':
+            cap.release()
+    except Exception as e:
+        st.error(f"Error: {e}")
 
 # Load the YOLOv9 model
 model = YOLO('yolov9c.pt')
@@ -62,10 +65,13 @@ options = {"STREAM_RESOLUTION": "720p"}
 
 # Process video
 if st.button('Start'):
-    if video_source == 'YouTube' and youtube_link:
-        process_video(youtube_link, model, options)
-    elif video_source == 'Local':
-        process_video('Local', model)
+    try:
+        if video_source == 'YouTube' and youtube_link:
+            process_video(youtube_link, model, options)
+        elif video_source == 'Local':
+            process_video('Local', model)
+    except Exception as e:
+        st.error(f"Error: {e}")
 
 # Note on closing resources
 st.sidebar.markdown("### Note")
