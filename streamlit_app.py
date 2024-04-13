@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator
 import streamlit as st
-from streamlit_webrtc import VideoTransformerBase, webrtc_streamer
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 import cv2
 
 # Function untuk plot bounding boxes pada frames
