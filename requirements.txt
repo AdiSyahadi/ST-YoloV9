@@ -1,5 +1,4 @@
 ultralytics
 streamlit
 opencv-python
-apt install libgl1-mesa-glx
 vidgear
