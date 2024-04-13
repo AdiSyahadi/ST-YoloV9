@@ -20,7 +20,7 @@ def plot_boxes(frame, model):
 def process_video(source, model, options=None):
     try:
         if source == 'Local':
-            cap = st.camera_input("Take a picture")  # Local webcam
+            cap = st.camera_input(0)  # Local webcam
         else:  # YouTube source
             cap = CamGear(source=source, stream_mode=True, logging=True, **options).start()
 
