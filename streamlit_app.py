@@ -34,6 +34,12 @@ with st.sidebar:
     youtube_link = ""
     if video_source == 'YouTube':
         youtube_link = st.text_input('YouTube video link', '')
+    elif video_source == 'Local':
+        webrtc_streamer(
+            key="example",
+            video_transformer_factory=lambda: YOLOv9Transformer(model),
+            async_transform=True,
+        )
 
 # Process video
 if st.button('Start'):
