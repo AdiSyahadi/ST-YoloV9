@@ -4,18 +4,6 @@ import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 import cv2
 
-# Function untuk plot bounding boxes pada frames
-def plot_boxes(frame, model):
-    results = model.predict(frame)
-    annotator = Annotator(frame)
-    for r in results:
-        boxes = r.boxes
-        for box in boxes:
-            b = box.xyxy[0]  # Box coordinates
-            c = box.cls      # Class ID
-            annotator.box_label(b, model.names[int(c)])
-    return annotator.result()
-
 # Custom transformer class for YOLOv9 object detection
 class YOLOv9Transformer(VideoTransformerBase):
     def __init__(self, model):
@@ -23,8 +11,15 @@ class YOLOv9Transformer(VideoTransformerBase):
 
     def transform(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = plot_boxes(frame, self.model)
-        return frame
+        results = self.model.predict(frame)
+        annotator = Annotator(frame)
+        for r in results:
+            boxes = r.boxes
+            for box in boxes:
+                b = box.xyxy[0]  # Box coordinates
+                c = box.cls      # Class ID
+                annotator.box_label(b, self.model.names[int(c)])
+        return annotator.result()
 
 # Load the YOLOv9 model
 model = YOLO('yolov9c.pt')
@@ -45,7 +40,11 @@ if st.button('Start'):
     if video_source == 'YouTube' and youtube_link:
         st.write("Streaming dari YouTube saat ini tidak didukung dalam contoh ini.")
     elif video_source == 'Local':
-        webrtc_streamer(key="example", video_transformer_factory=YOLOv9Transformer, model=model)
+        webrtc_streamer(
+            key="example",
+            video_transformer_factory=lambda: YOLOv9Transformer(model),
+            async_transform=True,
+        )
 
 # Note on closing resources
 st.sidebar.markdown("### Note")
