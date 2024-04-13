@@ -1,31 +1,53 @@
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 import cv2
+from vidgear.gears import CamGear
 
-# Custom transformer class for YOLOv9 object detection
-class YOLOv9Transformer(VideoTransformerBase):
-    def __init__(self, model):
-        self.model = model
+# Function untuk plot bounding boxes pada frames
+def plot_boxes(frame, model):
+    results = model.predict(frame)
+    annotator = Annotator(frame)
+    for r in results:
+        boxes = r.boxes
+        for box in boxes:
+            b = box.xyxy[0]  # Box coordinates
+            c = box.cls      # Class ID
+            annotator.box_label(b, model.names[int(c)])
+    return annotator.result()
 
-    def transform(self, frame):
+# Function to process and display video
+def process_video(source, model, options=None):
+    if source == 'Local':
+        cap = cv2.VideoCapture(0)  # Local webcam
+    else:  # YouTube source
+        cap = CamGear(source=source, stream_mode=True, logging=True, **options).start()
+
+    FRAME_WINDOW = st.empty()
+
+    while True:
+        if source == 'Local':
+            ret, frame = cap.read()
+            if not ret:
+                break
+        else:  # YouTube source
+            frame = cap.read()
+            if frame is None:
+                break
+        
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.model.predict(frame)
-        annotator = Annotator(frame)
-        for r in results:
-            boxes = r.boxes
-            for box in boxes:
-                b = box.xyxy[0]  # Box coordinates
-                c = box.cls      # Class ID
-                annotator.box_label(b, self.model.names[int(c)])
-        return annotator.result()
+        frame = plot_boxes(frame, model)
+        FRAME_WINDOW.image(frame)
+
+    if source == 'Local':
+        cap.release()
 
 # Load the YOLOv9 model
 model = YOLO('yolov9c.pt')
 
 # Streamlit UI setup
 st.set_page_config(page_title="Ruang Belajar", layout="wide", initial_sidebar_state="expanded")
+
 st.title('Ruang Belajar Deployment YoloV9')
 
 # Sidebar
@@ -34,23 +56,16 @@ with st.sidebar:
     youtube_link = ""
     if video_source == 'YouTube':
         youtube_link = st.text_input('YouTube video link', '')
-    elif video_source == 'Local':
-        webrtc_streamer(
-            key="example",
-            video_transformer_factory=lambda: YOLOv9Transformer(model),
-            async_transform=True,
-        )
+
+# Set desired quality
+options = {"STREAM_RESOLUTION": "720p"}
 
 # Process video
 if st.button('Start'):
     if video_source == 'YouTube' and youtube_link:
-        st.write("Streaming dari YouTube saat ini tidak didukung dalam contoh ini.")
+        process_video(youtube_link, model, options)
     elif video_source == 'Local':
-        webrtc_streamer(
-            key="example",
-            video_transformer_factory=lambda: YOLOv9Transformer(model),
-            async_transform=True,
-        )
+        process_video('Local', model)
 
 # Note on closing resources
 st.sidebar.markdown("### Note")
