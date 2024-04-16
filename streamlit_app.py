@@ -18,7 +18,7 @@ def plot_boxes(frame, model):
 
 # Function to process and display video
 def process_video(source, model, options=None):
-    if source == 'Local':
+    if source == 'Webcam':
         cap = cv2.VideoCapture(0)  # Local webcam
     else:  # YouTube source
         cap = CamGear(source=source, stream_mode=True, logging=True, **options).start()
@@ -26,7 +26,7 @@ def process_video(source, model, options=None):
     FRAME_WINDOW = st.empty()
 
     while True:
-        if source == 'Local':
+        if source == 'Webcam':
             ret, frame = cap.read()
             if not ret:
                 break
@@ -39,7 +39,7 @@ def process_video(source, model, options=None):
         frame = plot_boxes(frame, model)
         FRAME_WINDOW.image(frame)
 
-    if source == 'Local':
+    if source == 'Webcam':
         cap.release()
 
 # Load the YOLOv9 model
@@ -52,7 +52,7 @@ st.title('Ruang Belajar Deployment YoloV9')
 
 # Sidebar
 with st.sidebar:
-    video_source = st.radio('Pilih video source', ['Local', 'YouTube'])
+    video_source = st.radio('Pilih video source', ['Webcam', 'YouTube'])
     youtube_link = ""
     if video_source == 'YouTube':
         youtube_link = st.text_input('YouTube video link', '')
@@ -64,9 +64,5 @@ options = {"STREAM_RESOLUTION": "720p"}
 if st.button('Start'):
     if video_source == 'YouTube' and youtube_link:
         process_video(youtube_link, model, options)
-    elif video_source == 'Local':
-        process_video('Local', model)
-
-# Note on closing resources
-st.sidebar.markdown("### Note")
-st.sidebar.markdown("Tutup tab browser lain yang tidak anda gunakan untuk mendapat hasil webcam yang baik saat menggunakan sumber video lokal.")
+    elif video_source == 'Webcam':
+        process_video('Webcam', model)
