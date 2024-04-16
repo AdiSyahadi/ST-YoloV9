@@ -9,20 +9,6 @@ st.set_page_config(page_title="Ruang Belajar", layout="wide", initial_sidebar_st
 
 st.title('Ruang Belajar Deployment YoloV9')
 
-# Membuat Sidebar
-with st.sidebar:
-    video = st.radio('Pilih data video', ['Webcam', 'YouTube'])
-    link_youtube = ""
-    if video == 'YouTube':
-        link_youtube = st.text_input('Masukan Link Youtube', '')
-
-# Process video
-if st.button('Start'):
-    if data_video == 'YouTube' and youtube_link:
-        process_video(youtube_link, model)
-    elif data_video == 'Webcam':
-        process_video('Webcam', model)
-
 # Load Model YOLOv9 
 model = YOLO('yolov9c.pt')
 
@@ -39,13 +25,11 @@ def plot_boxes(frame, model):
     return annotasi.result()
 
 # Membuat Function untuk process dan display video
-def process_video(data, model):
+def process_video(data, model, placeholder):
     if data == 'Webcam':
         camera = cv2.VideoCapture(0)  # kode webcam
     else:  # YouTube link
-        camera = CamGear(data=data, stream_mode=True, logging=True).start()
-
-    FRAME_WINDOW = st.empty()
+        camera = CamGear(source=data, stream_mode=True, logging=True).start()
 
     while True:
         if data == 'Webcam':
@@ -59,7 +43,26 @@ def process_video(data, model):
         
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = plot_boxes(frame, model)
-        FRAME_WINDOW.image(frame)
+        placeholder.image(frame)
 
     if data == 'Webcam':
         camera.release()
+
+# Sidebar
+with st.sidebar:
+    video = st.radio('Pilih data video', ['Webcam', 'YouTube'])
+    link_youtube = ""
+    if video == 'YouTube':
+        link_youtube = st.text_input('Masukan Link Youtube', '')
+
+# Memanggil pemrosesan data video di main area
+process_placeholder = st.empty()
+
+# Process video
+with st.sidebar:
+    if st.button('Start'):
+        if video == 'YouTube' and link_youtube:
+            process_video(link_youtube, model, process_placeholder)
+        elif video == 'Webcam':
+            process_video('Webcam', model, process_placeholder)
+    st.image("logo.png", use_column_width=True)
