@@ -65,4 +65,5 @@ with st.sidebar:
             process_video(link_youtube, model, process_placeholder)
         elif video == 'Webcam':
             process_video('Webcam', model, process_placeholder)
-    st.image("logo.png", use_column_width=True)
+with st.sidebar:
+st.image("logo.png", use_column_width=True)
