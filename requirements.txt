@@ -3,4 +3,3 @@ streamlit
 opencv-python
 vidgear
 yt_dlp
-streamlit-webrtc
